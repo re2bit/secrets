@@ -1,0 +1,27 @@
+x-build:
+  &build
+  context: ./
+  args:
+    PHP_VERSION: ${PHP_VERSION-8.1}
+    COMPOSER_VERSION: ${COMPOSER_VERSION-2.5}
+  dockerfile: docker/Dockerfile
+
+services:
+  setup:
+    image: registry.xaer.de/xaer/php:${PHP_VERSION-8.1}-cli
+    build:
+      <<: *build
+    volumes:
+      - ./:/src
+    working_dir: "/src"
+    command: ["sh", "-c", "composer update"]
+  php:
+    image: registry.xaer.de/xaer/php:${PHP_VERSION-8.1}-cli
+    build:
+      <<: *build
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/src
+    working_dir: "/src"

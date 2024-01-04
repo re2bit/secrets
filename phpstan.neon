@@ -1,0 +1,13 @@
+includes:
+    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
+
+parameters:
+    paths:
+        - src
+        - tests
+    excludePaths:
+        - vendor/*
+        - tests/bootstrap.php
+    parallel:
+        maximumNumberOfProcesses: 2
+        processTimeout: 10.0

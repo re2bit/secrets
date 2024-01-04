@@ -1,0 +1,28 @@
+stages:
+  - test
+  - deploy
+
+variables:
+  COMPOSER_VERSION: 2
+
+test:
+  stage: test
+  variables:
+    COMPOSER_ALLOW_SUPERUSER: "1"
+    COMPOSER_MEMORY_LIMIT: "-1"
+  tags:
+    - docker-compose
+    - linux
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - PHP_VERSION=${PHP_VERSION} docker compose run php composer test-ci
+  parallel:
+    matrix:
+      - PHP_VERSION: ["8.0", "8.1", "8.2"]
+
+deploy:
+  stage: deploy
+  only:
+    - tags
+  script:
+    - 'curl --header "Job-Token: $CI_JOB_TOKEN" --data tag=$CI_COMMIT_TAG "${CI_API_V4_URL}/projects/$CI_PROJECT_ID/packages/composer"'

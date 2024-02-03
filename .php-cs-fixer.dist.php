@@ -4,7 +4,7 @@ $config = new PhpCsFixer\Config();
 $config
      ->setFinder(
          PhpCsFixer\Finder::create()
-             ->exclude(['vendor'])
+             ->exclude(['vendor', 'tmp'])
              ->in(__DIR__)
              ->name('*.php')
              ->ignoreDotFiles(true)
@@ -15,7 +15,7 @@ $config
          'declare_equal_normalize'                => true,
          'heredoc_to_nowdoc'                      => true,
          'multiline_whitespace_before_semicolons' => true,
-         'no_spaces_inside_parenthesis'           => true,
+         'spaces_inside_parentheses'              => false,
          'no_unused_imports'                      => true,
          'no_useless_return'                      => true,
          'no_whitespace_before_comma_in_array'    => true,

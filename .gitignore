@@ -4,5 +4,6 @@ vendor/*
 .php_cs.cache
 .php-cs-fixer.cache
 .phpunit.result.cache
+phpunit_results.xml
 phpunit.xml
 phpstan.json

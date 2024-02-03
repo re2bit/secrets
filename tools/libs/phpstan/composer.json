@@ -1,0 +1,10 @@
+{
+    "require": {
+        "phpstan/phpstan": "^1.8",
+        "proget-hq/phpstan-yii2": "^0.8.0"
+    }
+    ,
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    }
+}

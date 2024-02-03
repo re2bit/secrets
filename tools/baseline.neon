@@ -1,0 +1,11 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Function sodium_crypto_box_keypair not found\\.$#"
+			count: 1
+			path: ../src/Secrets/SodiumVault.php
+
+		-
+			message: "#^Function sodium_crypto_box_publickey not found\\.$#"
+			count: 1
+			path: ../src/Secrets/SodiumVault.php

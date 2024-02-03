@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+if (!file_exists(__DIR__ . '/libs/captainhook/vendor/bin/captainhook')) {
+    $pwd = getcwd();
+    chdir(__DIR__ . '/libs/captainhook');
+    system('composer install');
+    chdir($pwd);
+}
+
+$args = $argv;
+array_shift($args);
+system(
+        implode (
+                ' ',
+                array_merge([__DIR__ . '/libs/captainhook/vendor/bin/captainhook'], $args)
+        ),
+    $return
+);
+exit($return);

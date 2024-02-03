@@ -1,0 +1,31 @@
+#!/usr/bin/env php
+<?php
+
+if (PHP_VERSION_ID < 70400) {
+    echo "Minimum PHP Version not found. (found " . PHP_VERSION . " Skipping php-cs-fixer" . PHP_EOL;
+    exit(0);
+}
+
+$version = (string)PHP_VERSION_ID;
+
+if (!file_exists(__DIR__ . "/libs/php-cs-fixer{$version}/vendor/bin/php-cs-fixer")) {
+    $pwd = getcwd();
+    if (!mkdir($concurrentDirectory = __DIR__ . "/libs/php-cs-fixer{$version}") && !is_dir($concurrentDirectory)) {
+        throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+    }
+    copy(__DIR__ . "/libs/php-cs-fixer/composer.json", __DIR__ . "/libs/php-cs-fixer{$version}/composer.json");
+    chdir(__DIR__ . "/libs/php-cs-fixer{$version}/");
+    system('composer update');
+    chdir($pwd);
+}
+
+$args = $argv;
+array_shift($args);
+system(
+        implode (
+                ' ',
+                array_merge([__DIR__ . "/libs/php-cs-fixer{$version}/vendor/bin/php-cs-fixer"], $args)
+        ),
+    $return
+);
+exit($return);

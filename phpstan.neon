@@ -1,13 +1,13 @@
-includes:
-    - vendor/phpstan/phpstan/conf/bleedingEdge.neon
-
 parameters:
     paths:
         - src
         - tests
     excludePaths:
-        - vendor/*
+        - tests/Secrets/PhpUnitCompatibilityLayer.php
         - tests/bootstrap.php
+        - vendor/*
+        - tools/*
+        - tmp/*
     parallel:
-        maximumNumberOfProcesses: 2
+        maximumNumberOfProcesses: 8
         processTimeout: 10.0

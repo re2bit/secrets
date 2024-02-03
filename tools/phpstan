@@ -1,0 +1,43 @@
+#!/usr/bin/env php
+<?php
+
+if (PHP_VERSION_ID < 70200) {
+    echo "Minimum PHP Version not found. Skipping phpstan" . PHP_EOL;
+    exit(0);
+}
+
+$includes = <<<INCLUDES
+includes:
+    - tools/libs/phpstan%s/vendor/phpstan/phpstan/conf/bleedingEdge.neon
+    - tools/baseline.neon
+
+INCLUDES;
+
+
+$version = (string)PHP_VERSION_ID;
+
+if (!file_exists(__DIR__ . "/libs/phpstan{$version}/vendor/bin/phpstan")) {
+    $pwd = getcwd();
+    if (!mkdir($concurrentDirectory = __DIR__ . "/libs/phpstan{$version}") && !is_dir($concurrentDirectory)) {
+        throw new RuntimeException(sprintf('Directory "%s" was not created', $concurrentDirectory));
+    }
+    copy(__DIR__ . "/libs/phpstan/composer.json", __DIR__ . "/libs/phpstan{$version}/composer.json");
+    chdir(__DIR__ . "/libs/phpstan{$version}/");
+    system('composer update');
+
+    file_put_contents(__DIR__ . "/libs/phpstan{$version}/phpstan.neon", sprintf($includes, PHP_VERSION_ID));
+    system("cat " . __DIR__ ."/../phpstan.neon >> " . __DIR__ . "/libs/phpstan{$version}/phpstan.neon");
+
+    chdir($pwd);
+}
+
+$args = $argv;
+array_shift($args);
+system(
+        implode (
+                ' ',
+                array_merge([__DIR__ . "/libs/phpstan{$version}/vendor/bin/phpstan"], $args)
+        ),
+    $return
+);
+exit($return);

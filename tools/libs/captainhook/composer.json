@@ -1,0 +1,9 @@
+{
+    "require": {
+        "captainhook/captainhook": "^5.10"
+    }
+    ,
+    "require-dev": {
+        "roave/security-advisories": "dev-latest"
+    }
+}

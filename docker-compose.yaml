@@ -2,21 +2,29 @@ x-build:
   &build
   context: ./
   args:
-    PHP_VERSION: ${PHP_VERSION-8.1}
-    COMPOSER_VERSION: ${COMPOSER_VERSION-2.5}
+    PHP_VERSION: ${PHP_VERSION-7.0}
+    COMPOSER_VERSION: ${COMPOSER_VERSION-2.2}
   dockerfile: docker/Dockerfile
 
 services:
-  setup:
-    image: registry.xaer.de/xaer/php:${PHP_VERSION-8.1}-cli
+  clean:
+    image: registry.xaer.de/xaer/php:${PHP_VERSION-7.0}-cli
     build:
       <<: *build
     volumes:
       - ./:/src
     working_dir: "/src"
-    command: ["sh", "-c", "composer update"]
+    command: [ "sh", "-c", "rm -rf vendor || rm phpunit_results.xml || rm phpstan.json || rm composer.lock || rm .phpunit.result.cache" ]
+  setup:
+    image: registry.xaer.de/xaer/php:${PHP_VERSION-7.0}-cli
+    build:
+      <<: *build
+    volumes:
+      - ./:/src
+    working_dir: "/src"
+    command: ["sh", "-c", "composer update --with=php:$$(php -r \"echo PHP_VERSION.PHP_EOL;\")"]
   php:
-    image: registry.xaer.de/xaer/php:${PHP_VERSION-8.1}-cli
+    image: registry.xaer.de/xaer/php:${PHP_VERSION-7.0}-cli
     build:
       <<: *build
     depends_on:

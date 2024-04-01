@@ -41,7 +41,7 @@ class SodiumVault extends AbstractVault
             throw new RuntimeException(sprintf('Decryption key should be a string or an object that implements the __toString() method'));
         }
 
-        $this->pathPrefix = rtrim(str_replace('/', DIRECTORY_SEPARATOR, $secretsDir), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . basename($secretsDir) . '.';
+        $this->pathPrefix = rtrim(str_replace('/', DIRECTORY_SEPARATOR, $secretsDir?:''), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . basename($secretsDir?:'') . '.';
         $this->decryptionKey = (string)$decryptionKey;
         $this->store = new Store($secretsDir);
     }

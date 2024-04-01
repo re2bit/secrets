@@ -7,3 +7,4 @@ vendor/*
 phpunit_results.xml
 phpunit.xml
 phpstan.json
+composer.lock

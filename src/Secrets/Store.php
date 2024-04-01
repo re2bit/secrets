@@ -297,10 +297,10 @@ class Store
             str_replace(
                 '/',
                 DIRECTORY_SEPARATOR,
-                $this->secretsDir
+                $this->secretsDir?:''
             ),
             DIRECTORY_SEPARATOR
-        ) . DIRECTORY_SEPARATOR . basename($this->secretsDir) . '.';
+        ) . DIRECTORY_SEPARATOR . basename($this->secretsDir?:'') . '.';
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Tests\Re2bit\Secrets;
 
 use ErrorException;
 use Re2bit\Secrets\SodiumVault;
+use Re2bit\Secrets\Store;
 use ReflectionClass;
 use SodiumException;
 use Symfony\Component\Filesystem\Filesystem;
@@ -37,12 +38,12 @@ class SodiumVaultTest extends PhpUnitCompatibilityLayer
      */
     public function testGenerateKeys()
     {
-        $vault = new SodiumVault($this->secretsDir);
+        $vault = new SodiumVault(new Store($this->secretsDir));
 
         $this->assertTrue($vault->generateKeys());
 
-        $encryptionKeyFile = $this->secretsDir . '/test.encrypt.public.php';
-        $decryptionKeyFile = $this->secretsDir . '/test.decrypt.private.php';
+        $encryptionKeyFile = $this->secretsDir . '/encrypt.public.php';
+        $decryptionKeyFile = $this->secretsDir . '/decrypt.private.php';
 
         $this->assertFileExists($encryptionKeyFile);
         $this->assertFileExists($decryptionKeyFile);
@@ -80,7 +81,7 @@ class SodiumVaultTest extends PhpUnitCompatibilityLayer
      */
     public function testEncryptAndDecrypt()
     {
-        $vault = new SodiumVault($this->secretsDir);
+        $vault = new SodiumVault(new Store($this->secretsDir));
         $vault->generateKeys();
 
         $plain = "plain\ntext";
@@ -96,6 +97,6 @@ class SodiumVaultTest extends PhpUnitCompatibilityLayer
         $this->assertTrue($vault->remove('foo'));
         $this->assertFalse($vault->remove('foo'));
 
-        $this->assertSame([], $vault->listing());
+        $this->assertSame([], $vault->listing(true));
     }
 }

@@ -245,7 +245,7 @@ class Store
      * @param string $filename The filename to concatenate with the path prefix and file extension.
      * @return string The full filename.
      */
-    private function getFilenameWithPathAndExtension($filename): string
+    public function getFilenameWithPathAndExtension($filename): string
     {
         return $this->pathPrefix . $filename . self::PHP_FILE_EXTENSION;
     }
@@ -300,7 +300,7 @@ class Store
                 $this->secretsDir?:''
             ),
             DIRECTORY_SEPARATOR
-        ) . DIRECTORY_SEPARATOR . basename($this->secretsDir?:'') . '.';
+        ) . DIRECTORY_SEPARATOR;
     }
 
     /**
@@ -330,5 +330,10 @@ class Store
         if (!is_array($list)) {
             throw new InvalidArgumentException("Parameter '$name' has to be an array");
         }
+    }
+
+    public function getStoreLocation(): string
+    {
+        return $this->pathPrefix;
     }
 }

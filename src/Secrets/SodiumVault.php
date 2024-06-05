@@ -2,7 +2,6 @@
 
 namespace Re2bit\Secrets;
 
-use const DIRECTORY_SEPARATOR;
 use function dirname;
 use ErrorException;
 use function function_exists;
@@ -22,28 +21,28 @@ class SodiumVault extends AbstractVault
     /** @var string */
     private $decryptionKey;
 
-    /** @var string */
-    private $pathPrefix;
-
-    /**
-     * @var Store
-     */
+    /** @var Store */
     private $store;
 
     /**
-     * @param string $secretsDir
+     * @param string|Store $store
      * @param mixed $decryptionKey A string or a stringable object that defines the private key to use to decrypt the vault
      *                                               or null to store generated keys in the provided $secretsDir
      */
-    public function __construct($secretsDir, $decryptionKey = null)
+    public function __construct($store, $decryptionKey = null)
     {
         if (null !== $decryptionKey && !is_string($decryptionKey) && !(is_object($decryptionKey) && method_exists($decryptionKey, '__toString'))) {
             throw new RuntimeException(sprintf('Decryption key should be a string or an object that implements the __toString() method'));
         }
 
-        $this->pathPrefix = rtrim(str_replace('/', DIRECTORY_SEPARATOR, $secretsDir?:''), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . basename($secretsDir?:'') . '.';
         $this->decryptionKey = (string)$decryptionKey;
-        $this->store = new Store($secretsDir);
+        if (is_string($store)) {
+            $this->store = new Store($store);
+        } elseif ($store instanceof Store) {
+            $this->store = $store;
+        } else {
+            throw new RuntimeException('store must be a string or an Store object');
+        }
     }
 
     /**
@@ -82,7 +81,7 @@ class SodiumVault extends AbstractVault
             //@todo update message
             $this->lastMessage = sprintf(
                 'Sodium keys already exist at "%s*.{public,private}" and won\'t be overridden.',
-                $this->getPrettyPath($this->pathPrefix)
+                $this->getPrettyPath($this->store->getStoreLocation())
             );
 
             return false;
@@ -95,7 +94,7 @@ class SodiumVault extends AbstractVault
         $this->store->saveDecryptionKey($this->decryptionKey);
 
         //@todo update message
-        $this->lastMessage = sprintf('Sodium keys have been generated at "%s*.public/private' . self::PHP_FILE_EXTENSION . '".', $this->getPrettyPath($this->pathPrefix));
+        $this->lastMessage = sprintf('Sodium keys have been generated at "%s*.public/private' . self::PHP_FILE_EXTENSION . '".', $this->getPrettyPath($this->store->getStoreLocation()));
 
         return true;
     }
@@ -129,9 +128,9 @@ class SodiumVault extends AbstractVault
         $list = $this->listing();
         $list[$name] = null;
         uksort($list, 'strnatcmp');
-        file_put_contents($this->pathPrefix . 'list' . self::PHP_FILE_EXTENSION, sprintf("<?php\n\nreturn %s;\n", var_export($list, true)), LOCK_EX);
+        file_put_contents($this->store->getFilenameWithPathAndExtension('list'), sprintf("<?php\n\nreturn %s;\n", var_export($list, true)), LOCK_EX);
 
-        $this->lastMessage = sprintf('Secret "%s" encrypted in "%s"; you can commit it.', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+        $this->lastMessage = sprintf('Secret "%s" encrypted in "%s"; you can commit it.', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
     }
 
     /**
@@ -145,7 +144,7 @@ class SodiumVault extends AbstractVault
         $this->validateName($name);
 
         if (!$this->store->valueExists($name)) {
-            $this->lastMessage = sprintf('Secret "%s" not found in "%s".', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+            $this->lastMessage = sprintf('Secret "%s" not found in "%s".', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
 
             return null;
         }
@@ -159,13 +158,13 @@ class SodiumVault extends AbstractVault
         $this->loadKeys();
 
         if ('' === $this->decryptionKey) {
-            $this->lastMessage = sprintf('Secret "%s" cannot be revealed as no decryption key was found in "%s".', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+            $this->lastMessage = sprintf('Secret "%s" cannot be revealed as no decryption key was found in "%s".', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
 
             return null;
         }
 
         if (false === $value = sodium_crypto_box_seal_open((string)$this->store->loadValue($name), $this->decryptionKey)) {
-            $this->lastMessage = sprintf('Secret "%s" cannot be revealed as the wrong decryption key was provided for "%s".', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+            $this->lastMessage = sprintf('Secret "%s" cannot be revealed as the wrong decryption key was provided for "%s".', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
 
             return null;
         }
@@ -183,7 +182,7 @@ class SodiumVault extends AbstractVault
         $this->validateName($name);
 
         if (!$this->store->valueExists($name)) {
-            $this->lastMessage = sprintf('Secret "%s" not found in "%s".', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+            $this->lastMessage = sprintf('Secret "%s" not found in "%s".', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
 
             return false;
         }
@@ -192,7 +191,7 @@ class SodiumVault extends AbstractVault
         unset($list[$name]);
         $this->store->updateListing($list);
 
-        $this->lastMessage = sprintf('Secret "%s" removed from "%s".', $name, $this->getPrettyPath(dirname($this->pathPrefix) . DIRECTORY_SEPARATOR));
+        $this->lastMessage = sprintf('Secret "%s" removed from "%s".', $name, $this->getPrettyPath(dirname($this->store->getStoreLocation())));
 
         return $this->store->removeValue($name);
     }
@@ -206,7 +205,7 @@ class SodiumVault extends AbstractVault
     {
         $this->lastMessage = null;
 
-        if (!is_file($file = $this->pathPrefix . 'list' . self::PHP_FILE_EXTENSION)) {
+        if (!is_file($file = $this->store->getFilenameWithPathAndExtension('list'))) {
             return [];
         }
 
@@ -258,7 +257,7 @@ class SodiumVault extends AbstractVault
             $this->encryptionKey = sodium_crypto_box_publickey($this->decryptionKey);
         } else {
             //@todo update message
-            throw new RuntimeException(sprintf('Encryption key not found in "%s".', dirname($this->pathPrefix)));
+            throw new RuntimeException(sprintf('Encryption key not found in "%s".', dirname($this->store->getStoreLocation())));
         }
     }
 }

@@ -162,4 +162,42 @@ class StoreTest extends PhpUnitCompatibilityLayer
         /** @phpstan-ignore-next-line */
         $store->saveValue('testKey', false);
     }
+
+    /**
+     * @throws ErrorException
+     * @return void
+     */
+    public function testFilenamePrefixForValue()
+    {
+        $store = new Store($this->secretsDir, 'secrets.');
+        $value = 'testValue';
+        $store->saveValue('testKey', $value);
+        static::assertFileExists($this->secretsDir . 'secrets.testKey.87ada9.php');
+    }
+
+    /**
+     * @throws ErrorException
+     * @return void
+     */
+    public function testHasEncryptKeyWithFilenamePrefix()
+    {
+        $store = new Store($this->secretsDir, 'secrets.');
+        static::assertFalse($store->hasEncryptKey());
+        $store->saveEncryptionKey('a');
+        static::assertTrue($store->hasEncryptKey());
+        static::assertFileExists($this->secretsDir . 'secrets.encrypt.public.php');
+    }
+
+    /**
+     * @throws ErrorException
+     * @return void
+     */
+    public function testHasDecryptKeyWithFilenamePrefix()
+    {
+        $store = new Store($this->secretsDir, 'secrets.');
+        static::assertFalse($store->hasDecryptKey());
+        $store->saveDecryptionKey('a');
+        static::assertTrue($store->hasDecryptKey());
+        static::assertFileExists($this->secretsDir . 'secrets.decrypt.private.php');
+    }
 }

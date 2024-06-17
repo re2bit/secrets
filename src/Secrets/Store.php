@@ -15,6 +15,7 @@ class Store
     const ENCODED_DATA_FORMAT = "<?php // %s on %s\n\nreturn \"%s\";\n";
     const DATE_FORMAT = 'r';
     const LIST_DATA_FORMAT = "<?php\n\nreturn %s;\n";
+    const FILENAME_PREFIX = '';
 
     /**
      * @var string
@@ -38,20 +39,27 @@ class Store
      * @var string
      */
     private $listFilename;
+    /**
+     * @var string
+     */
+    private $filenamePrefix;
 
     /**
      * @param string $secretDir
+     * @param string $filenamePrefix
      * @param string $encryptPublicFilename
      * @param string $decryptPrivateFilename
      * @param string $listFilename
      */
     public function __construct(
         $secretDir,
+        $filenamePrefix = self::FILENAME_PREFIX,
         $encryptPublicFilename = self::ENCRYPT_PUBLIC_FILENAME,
         $decryptPrivateFilename = self::DECRYPT_PRIVATE_FILENAME,
         $listFilename = self::LIST_FILENAME
     ) {
         $this->secretsDir = $secretDir;
+        $this->filenamePrefix = $filenamePrefix;
         $this->pathPrefix = $this->createPathPrefix();
         $this->encryptPublicFilename = $encryptPublicFilename;
         $this->decryptPrivateFilename = $decryptPrivateFilename;
@@ -247,7 +255,7 @@ class Store
      */
     public function getFilenameWithPathAndExtension($filename): string
     {
-        return $this->pathPrefix . $filename . self::PHP_FILE_EXTENSION;
+        return $this->pathPrefix . $this->filenamePrefix . $filename . self::PHP_FILE_EXTENSION;
     }
 
     /**
@@ -259,7 +267,7 @@ class Store
     private function getFileNameWithHashPathAndExtension($filename): string
     {
         return $this->getFilenameWithPathAndExtension(
-            $filename . '.' . substr(md5($filename), 0, 6)
+            $filename . '.' . substr(md5($this->filenamePrefix . $filename), 0, 6)
         );
     }
 
